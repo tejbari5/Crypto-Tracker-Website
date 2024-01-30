@@ -1,5 +1,4 @@
 import { toast } from "react-toastify";
-
 export const addToWatchlist = (id) => {
   let items = localStorage.getItem("watchlist");
   if (items) {
@@ -8,8 +7,7 @@ export const addToWatchlist = (id) => {
       arr.push(id);
       localStorage.setItem("watchlist", JSON.stringify(arr));
     }
-  } 
-  else {
+  } else {
     var arr = JSON.stringify([id]);
     localStorage.setItem("watchlist", arr);
   }
