@@ -1,90 +1,102 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import CoinInfo from "../components/Coin/CoinInfo/info";
-import LineChart from "../components/Coin/LineChart/lineChart";
-import PriceToggle from "../components/Coin/PriceToggle/priceToggle";
-import SelectDays from "../components/Coin/SelectDays/selectDays";
-import Footer from "../components/Common/Footer/footer";
+import axios from "axios";
+import Loader from "../components/Common/Loader";
 import Header from "../components/Common/Header";
-import Loader from "../components/Common/Loader/loader";
-import List from "../components/Dashboard/List/list";
-import { coinObject } from "../functions/coinObject";
-import { getCoinData } from "../functions/getCoinData";
+import { coinObject } from "../functions/convertObject";
+import List from "../components/Dashboard/List";
+import CoinInfo from "../components/Coin/CoinInfo";
 import { getCoinPrices } from "../functions/getCoinPrices";
+import { getCoinData } from "../functions/getCoinData";
+import LineChart from "../components/Coin/LineChart";
+import { convertDate } from "../functions/converDate";
+import SelectDays from "../components/Coin/SelectDays";
 import { settingChartData } from "../functions/settingChartData";
+import TogglePriceType from "../components/Coin/PriceType";
+
 
 function CoinPage() {
-  const { id } = useParams();
-  const [coin, setCoin] = useState();
-  const [loading, setLoading] = useState(false);
-  const [days, setDays] = useState(120);
-  const [priceType, setPriceType] = useState("prices");
-  const [chartData, setChartData] = useState({
-    labels: [],
-    datasets: [],
-  });
+    const { id } = useParams();
+    const [isLoader, setIsLoading] = useState(true);
+    const [coinData, setCoinData] = useState();
+    const [days, setDays] = useState(30);
+    const [chartData, setChartData] = useState({});
+    const [priceType, setPriceType] = useState('prices');
 
-  useEffect(() => {
-    getData();
-  }, [id]);
+    useEffect(() => {
+        if (id) {
+            getData();
+        }
+    }, [id]);
 
-  const getData = async () => {
-    setLoading(true);
-    const data = await getCoinData(id);
-    if (data) {
-      coinObject(setCoin, data); //For Coin Obj being passed in the List
-      const prices = await getCoinPrices(id, days, priceType);
-      if (prices) {
-        settingChartData(setChartData, prices, data);
-        setLoading(false);
-      }
+    async function getData() {
+        const data = await getCoinData(id);
+        if (data) {
+            coinObject(setCoinData, data);
+            const prices = await getCoinPrices(id, days,priceType);
+            if (prices.length > 0) {
+                console.log("WOHOOOO");
+                 
+                settingChartData(setChartData, prices);
+                setIsLoading(false);
+            }
+        }
     }
-  };
 
-  const handleDaysChange = async (event) => {
-    setLoading(true);
-    setDays(event.target.value);
-    const prices = await getCoinPrices(id, event.target.value, priceType);
-    if (prices) {
-      settingChartData(setChartData, prices, coin);
-      setLoading(false);
-    }
-  };
+    const handleDaysChange = async(event) => {
+        setIsLoading(true);
+      setDays(event.target.value);
 
-  const handlePriceTypeChange = async (event) => {
-    setLoading(true);
-    setPriceType(event.target.value);
-    const prices = await getCoinPrices(id, days, event.target.value);
-    if (prices) {
-      settingChartData(setChartData, prices, coin);
-    }
-    setLoading(false);
-  };
+      const prices = await getCoinPrices(id, event.target.value,priceType);
+            if (prices.length > 0) {
+                settingChartData(setChartData, prices);
+                setIsLoading(false);
+            }
+    };
 
-  return (
-    <div>
-      <Header />
-      {loading || !coin?.id || !chartData ? (
-        <Loader />
-      ) : (
-        <>
-          <div className="grey-wrapper">
-            <List coin={coin} delay={0.1} />
-          </div>
-          <div className="grey-wrapper">
-            <SelectDays days={days} handleDaysChange={handleDaysChange} />
-            <PriceToggle
-              handlePriceTypeChange={handlePriceTypeChange}
-              priceType={priceType}
-            />
-            <LineChart chartData={chartData} priceType={priceType} />
-          </div>
-          <CoinInfo name={coin.name} desc={coin.desc} />
-        </>
-      )}
-      <Footer />
-    </div>
-  );
+    const handlePriceTypeChange = async(event, newType) => {
+        setIsLoading(true);
+        if(newType==null){
+            const prices = await getCoinPrices(id, days,priceType);
+            if (prices.length > 0) {
+                settingChartData(setChartData, prices);
+                setIsLoading(false);
+            }
+        }
+        else{
+        setPriceType(newType);
+        // console.log("new", newType);
+        const prices = await getCoinPrices(id, days,newType);
+            if (prices.length > 0) {
+                settingChartData(setChartData, prices);
+                setIsLoading(false);
+            }
+        }
+    };
+
+    return (
+        <div>
+            {/* <Header /> */}
+            {
+                isLoader ? (
+                    <Loader />
+                ) : (
+                    <>
+                        <div className="grey-wrapper">
+                            <List coin={coinData} />
+                        </div>
+                        <div className="grey-wrapper">
+                            <SelectDays days={days} handleDaysChange={handleDaysChange}/>
+                            <TogglePriceType priceType={priceType} handlePriceTypeChange={handlePriceTypeChange}/>
+                            <LineChart chartData={chartData} priceType={priceType} />
+                        </div>
+                        <CoinInfo heading={coinData.name} desc={coinData.desc} />
+                    </>
+                )
+            }
+        </div>
+    )
+
 }
 
 export default CoinPage;

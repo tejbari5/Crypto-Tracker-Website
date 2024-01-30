@@ -1,16 +1,18 @@
 import React from "react";
-import Footer from "../components/Common/Footer/footer";
-import Header from "../components/Common/Header";
-import LandingPageComponent from "../components/LandingPage/Intro";
 
-function HomePage() {
-  return (
-    <div>
-      <Header />
-      <LandingPageComponent />
-      <Footer />
-    </div>
-  );
-}
+import Header from "../components/Common/Header";
+import MainComponent from "../components/LandingPage/MainComponent";
+
+
+function HomePage(){
+
+    return(
+        <div>
+            {/* <Header/> */}
+            <MainComponent/>
+        </div>
+    )
+
+};
 
 export default HomePage;
